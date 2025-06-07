@@ -1,31 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSceneStore } from "../stores/useSceneStore";
 
-export const CommandPanel = () => {
-  const [input, setInput] = useState("");
-  const add = useSceneStore((s) => s.addInteractiveCoord);
-  const clear = useSceneStore((s) => s.clearInteractiveCoords);
-
-  const run = () => {
-    const tokens = input.split(" ");
-    if (tokens[0] === "AddPoint" && tokens.length === 3) {
-      const lon = parseFloat(tokens[1]);
-      const lat = parseFloat(tokens[2]);
-      add({ lon, lat });
-    }
-    if (tokens[0] === "Clear") {
-      clear();
-    }
-  };
+const CzmlPacketDebugger = () => {
+  const czmlPackets = useSceneStore((s) => s.czmlPackets);
+  const interactiveCoords = useSceneStore((s)=>s.interactiveCoords)
 
   return (
-    <div style={{ padding: 8 }}>
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="AddPoint 135 35"
-      />
-      <button onClick={run}>Run</button>
+    <div style={{ maxHeight: "300px", overflowY: "auto", padding: "1em",color:"black" }}>
+      <h3>czml Packets</h3>
+      <pre>{JSON.stringify(czmlPackets, null, 2)}</pre>
+      <p>{interactiveCoords?.lat},{interactiveCoords?.lon}</p>
+    </div>
+  );
+};
+
+export const CommandPanel = () => {
+
+  const addczmlPacket = useSceneStore((state)=>state.addczmlPacket);
+  
+  const handleClick = (()=>{
+    console.log("button clicked!")
+    addczmlPacket({
+    id: "point-1",
+    name: "Tokyo",
+    position: {
+      cartographicDegrees: [139.767, 35.681, 0],
+    },
+    point: {
+      pixelSize: 10,
+      color: {
+        rgba: [0, 255, 255, 255],
+      },
+    },
+  })
+
+  })
+
+  return (
+    <div >
+      <button onClick={handleClick}>add point</button>
+      <CzmlPacketDebugger/>
     </div>
   );
 };

@@ -1,20 +1,59 @@
 import { create } from "zustand";
 
-type Coord = { lon: number; lat: number; height?: number };
+type czmlPacket = {
+  id: string;
+  name?: string;
+  position?: {
+    cartographicDegrees: [number, number, number];
+  };
+  point?: {
+    pixelSize: number;
+    color: {
+      rgba: [number, number, number, number];
+    };
+  };
+  [key: string]: any; // 保持灵活性
+};
 
-interface SceneState {
-  interactiveCoords: Coord[];
-  setInteractiveCoords: (coords: Coord[]) => void;
-  addInteractiveCoord: (coord: Coord) => void;
-  clearInteractiveCoords: () => void;
-}
+type Coord = { lon: number; lat: number; height: number }| null;
 
-export const useSceneStore = create<SceneState>((set) => ({
-  interactiveCoords: [],
-  setInteractiveCoords: (coords) => set({ interactiveCoords: coords }),
-  addInteractiveCoord: (coord) =>
+type SceneState = {
+  czmlPackets: czmlPacket[];
+  selectedPacketId: string | null;
+
+  interactiveCoords: Coord;
+
+  addczmlPacket: (packet: czmlPacket) => void;
+  updateczmlPacket: (Packet: czmlPacket) => void;
+  removeczmlPacket: (id: string) => void;
+  selectPacket: (id: string | null) => void;
+  setinteractionCoord: (coord: Coord) => void;
+};
+
+export const useSceneStore = create<SceneState>((set, get) => ({
+  czmlPackets: [],
+  selectedPacketId: null,
+  interactiveCoords:null,
+
+  addczmlPacket: (Packet) =>
     set((state) => ({
-      interactiveCoords: [...state.interactiveCoords, coord],
+      czmlPackets: [...state.czmlPackets, Packet],
     })),
-  clearInteractiveCoords: () => set({ interactiveCoords: [] }),
+
+  updateczmlPacket: (updated) =>
+    set((state) => ({
+      czmlPackets: state.czmlPackets.map((e) =>
+        e.id === updated.id ? updated : e
+      ),
+    })),
+
+  removeczmlPacket: (id) =>
+    set((state) => ({
+      czmlPackets: state.czmlPackets.filter((e) => e.id !== id),
+    })),
+
+  selectPacket: (id) => set({ selectedPacketId: id }),
+
+  setinteractionCoord: (coord) =>
+  set(() => ({ interactiveCoords: coord })),
 }));
