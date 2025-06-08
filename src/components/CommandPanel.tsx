@@ -21,34 +21,6 @@ export const CommandPanel = () => {
   const tempCoord = useSceneStore((s) => s.tempCoord);
   const addCzmlPacket = useSceneStore((s) => s.addCzmlPacket);
   const setTempCoord = useSceneStore((s) => s.setTempCoord);
-  const clearTempPoint = useSceneStore((s) => s.clearTempPoint);
-
-  const handleConfirmButton=(tempCoord)=>{
-    addCzmlPacket({
-      id: `point-${Date.now()}`,
-      name: "Point",
-      position: {
-        cartographicDegrees: [
-          tempCoord.lon,
-          tempCoord.lat,
-          tempCoord.height ?? 0,
-        ],
-      },
-      point: {
-        pixelSize: 10,
-        color: { rgba: [255, 0, 0, 255] },
-      },
-    });
-    setTempCoord(null);
-    setMode("idle");
-    clearTempPoint();
-  }
-
-  const handleCancelButton = () =>{
-    setTempCoord(null); 
-    setMode("idle");
-    clearTempPoint();
-  }
 
   return (
     <div style={{ padding: "1em" }}>
