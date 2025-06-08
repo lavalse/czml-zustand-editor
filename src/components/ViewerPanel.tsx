@@ -1,22 +1,26 @@
 import { useEffect, useRef } from "react";
 import { CesiumController } from "../lib/CesiumController";
-import type { ClickCoord } from "../lib/CesiumController";
 import { useSceneStore } from "../stores/useSceneStore";
 
 export const ViewerPanel = () => {
   const controllerRef = useRef<CesiumController | null>(null);
   const czmlPackets = useSceneStore((s) => s.czmlPackets);
-  const setCoord = useSceneStore((s) => s.setInteractionCoord);
+
 
   useEffect(() => {
-    controllerRef.current = new CesiumController("cesiumContainer", (coord: ClickCoord) => {
-      console.log("[Cesium] 用户点击坐标：", coord);
-      setCoord(coord); // 写入 store
+    controllerRef.current = new CesiumController("cesiumContainer", {
+      onClick: (coord) => {
+        const { mode, setTempCoord, setMode } = useSceneStore.getState();
+        if (mode === "addPoint:collecting") {
+          setTempCoord({ ...coord });
+          setMode("addPoint:confirm");
+        }else if (mode === "addPoint:confirm") {
+          setTempCoord({ ...coord }); // ✅ 允许继续更新临时坐标
+        }
+      },
     });
 
-    return () => {
-      controllerRef.current?.destroy();
-    };
+    return () => controllerRef.current?.destroy();
   }, []);
 
   useEffect(() => {

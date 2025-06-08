@@ -1,45 +1,29 @@
 import { create } from "zustand";
-import type { CzmlPacket } from "../types/czml";
 
-type Coord = { lon: number; lat: number; height: number } | null;
+export type Coord = { lon: number; lat: number; height: number };
+export type Mode = "idle" | "addPoint:collecting" | "addPoint:confirm";
 
-type SceneState = {
+export type CzmlPacket = any; // Replace with proper CZML typing later
+
+interface SceneState {
+  mode: Mode;
+  tempCoord: Coord | null;
   czmlPackets: CzmlPacket[];
-  selectedPacketId: string | null;
 
-  interactiveCoords: Coord;
+  setMode: (m: Mode) => void;
+  setTempCoord: (c: Coord | null) => void;
+  addCzmlPacket: (p: CzmlPacket) => void;
+}
 
-  addCzmlPacket: (packet: CzmlPacket) => void;
-  updateCzmlPacket: (packet: CzmlPacket) => void;
-  removeCzmlPacket: (id: string) => void;
-  selectPacket: (id: string | null) => void;
-  setInteractionCoord: (coord: Coord) => void;
-};
-
-export const useSceneStore = create<SceneState>((set, get) => ({
+export const useSceneStore = create<SceneState>((set) => ({
+  mode: "idle",
+  tempCoord: null,
   czmlPackets: [],
-  selectedPacketId: null,
-  interactiveCoords: null,
+  tempCzmlPackets:[],
 
-  addCzmlPacket: (packet) =>
-    set((state) => ({
-      czmlPackets: [...state.czmlPackets, packet],
-    })),
 
-  updateCzmlPacket: (updated) =>
-    set((state) => ({
-      czmlPackets: state.czmlPackets.map((e) =>
-        e.id === updated.id ? updated : e
-      ),
-    })),
-
-  removeCzmlPacket: (id) =>
-    set((state) => ({
-      czmlPackets: state.czmlPackets.filter((e) => e.id !== id),
-    })),
-
-  selectPacket: (id) => set({ selectedPacketId: id }),
-
-  setInteractionCoord: (coord) =>
-    set(() => ({ interactiveCoords: coord })),
+  setMode: (mode) => set({ mode }),
+  setTempCoord: (c) => set({ tempCoord: c }),
+  addCzmlPacket: (p) =>
+    set((state) => ({ czmlPackets: [...state.czmlPackets, p] })),
 }));

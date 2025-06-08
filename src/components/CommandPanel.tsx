@@ -1,55 +1,88 @@
 import { useSceneStore } from "../stores/useSceneStore";
 
-const CzmlPacketDebugger = () => {
-  const czmlPackets = useSceneStore((s) => s.czmlPackets);
-  const interactiveCoords = useSceneStore((s) => s.interactiveCoords);
+const DebugPanel = () => {
+  const mode = useSceneStore((s) => s.mode);
+  const coord = useSceneStore((s) => s.tempCoord);
+  const czml = useSceneStore((s) => s.czmlPackets);
 
   return (
-    <div
-      style={{
-        maxHeight: "300px",
-        overflowY: "auto",
-        padding: "1em",
-        color: "black",
-        backgroundColor: "#eee",
-        fontFamily: "monospace",
-      }}
-    >
-      <h3>CZML Packets</h3>
-      <pre>{JSON.stringify(czmlPackets, null, 2)}</pre>
-      <p>
-        Clicked Coord: {interactiveCoords?.lat}, {interactiveCoords?.lon},{" "}
-        {interactiveCoords?.height}
-      </p>
+    <div style={{ background: "#eee", color:"black",padding: "1em", fontFamily: "monospace" }}>
+      <h4>SceneState</h4>
+      <p>mode:{mode}</p>
+      <p>tempCoord:{coord ? `${coord.lat}, ${coord.lon}, ${coord.height}` : "无"}</p>
+      <p>czmlPackets:{czml.length}</p>
     </div>
   );
 };
 
 export const CommandPanel = () => {
-  const addCzmlPacket = useSceneStore((state) => state.addCzmlPacket);
+  const mode = useSceneStore((s) => s.mode);
+  const setMode = useSceneStore((s) => s.setMode);
+  const tempCoord = useSceneStore((s) => s.tempCoord);
+  const addCzmlPacket = useSceneStore((s) => s.addCzmlPacket);
+  const setTempCoord = useSceneStore((s) => s.setTempCoord);
+  const clearTempPoint = useSceneStore((s) => s.clearTempPoint);
 
-  const handleClick = () => {
-    console.log("button clicked!");
-
+  const handleConfirmButton=(tempCoord)=>{
     addCzmlPacket({
-      id: "point-1",
-      name: "Tokyo",
+      id: `point-${Date.now()}`,
+      name: "Point",
       position: {
-        cartographicDegrees: [139.767, 35.681, 0],
+        cartographicDegrees: [
+          tempCoord.lon,
+          tempCoord.lat,
+          tempCoord.height ?? 0,
+        ],
       },
       point: {
         pixelSize: 10,
-        color: {
-          rgba: [0, 255, 255, 255],
-        },
+        color: { rgba: [255, 0, 0, 255] },
       },
     });
-  };
+    setTempCoord(null);
+    setMode("idle");
+    clearTempPoint();
+  }
+
+  const handleCancelButton = () =>{
+    setTempCoord(null); 
+    setMode("idle");
+    clearTempPoint();
+  }
 
   return (
-    <div>
-      <button onClick={handleClick}>Add Point</button>
-      <CzmlPacketDebugger />
+    <div style={{ padding: "1em" }}>
+      <button onClick={() => setMode("addPoint:collecting")}>开始添加点</button>
+
+      {mode === "addPoint:confirm" && tempCoord && (
+        <div>
+          <p>添加点：{tempCoord.lat.toFixed(6)}, {tempCoord.lon.toFixed(6)}</p>
+          <button
+            onClick={() => {
+              addCzmlPacket({
+                id: `point-${Date.now()}`,
+                name: "Point",
+                position: {
+                  cartographicDegrees: [
+                    tempCoord.lon,
+                    tempCoord.lat,
+                    tempCoord.height ?? 0,
+                  ],
+                },
+                point: {
+                  pixelSize: 10,
+                  color: { rgba: [255, 0, 0, 255] },
+                },
+              });
+              setTempCoord(null);
+              setMode("idle");
+            }}
+          >
+            确认</button>
+          <button onClick={() => { setTempCoord(null); setMode("idle"); }}>取消</button>
+        </div>
+      )}
+      <DebugPanel/>
     </div>
   );
 };

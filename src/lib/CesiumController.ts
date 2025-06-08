@@ -7,25 +7,25 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   CzmlDataSource,
+  Entity
 } from "cesium";
 
-import type { CzmlPacket } from "../types/czml";
-
+import type { Coord, CzmlPacket } from "../stores/useSceneStore";
 
 Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ION_TOKEN;
 
-export type ClickCoord = {
-  lon: number;
-  lat: number;
-  height: number;
-};
+export type ClickCoord = Coord;
+
+export interface ViewerEventHandlers {
+  onClick?: (coord: ClickCoord) => void;
+}
 
 export class CesiumController {
   viewer: Viewer;
   handler: ScreenSpaceEventHandler;
   czmlDataSource: CzmlDataSource;
 
-  constructor(containerId: string, onClick?: (coord: ClickCoord) => void) {
+  constructor(containerId: string, handlers?: ViewerEventHandlers) {
     this.viewer = new Viewer(containerId, {
       animation: false,
       timeline: false,
@@ -37,8 +37,8 @@ export class CesiumController {
 
     this.handler = new ScreenSpaceEventHandler(this.viewer.scene.canvas);
 
-    if (onClick) {
-      this.handler.setInputAction((movement: ScreenSpaceEventHandler.PositionedEvent) => {
+    if (handlers?.onClick) {
+      this.handler.setInputAction((movement) => {
         const picked = this.viewer.scene.pickPosition(movement.position);
         if (!picked) return;
 
@@ -49,7 +49,7 @@ export class CesiumController {
           height: carto.height,
         };
 
-        onClick(coord);
+        handlers?.onClick?.(coord);
       }, ScreenSpaceEventType.LEFT_CLICK);
     }
   }
